@@ -62,6 +62,8 @@ extern str _tps_xavu_cfg;
 extern str _tps_xavu_field_acontact;
 extern str _tps_xavu_field_bcontact;
 extern str _tps_xavu_field_contact_host;
+extern str _tps_xavu_field_a_contact_host;
+extern str _tps_xavu_field_b_contact_host;
 
 extern str _tps_context_param;
 extern str _tps_context_value;
@@ -380,13 +382,29 @@ int tps_storage_fill_contact(
 
 		/* contact_host xavu takes preference, reset vavu */
 		vavu = NULL;
-		if(_tps_xavu_cfg.len > 0 && _tps_xavu_field_contact_host.len > 0) {
-			vavu = xavu_get_child_with_sval(
-					&_tps_xavu_cfg, &_tps_xavu_field_contact_host);
-		}
-		if(vavu != NULL && vavu->val.v.s.len > 0) {
-			memcpy(td->cp, vavu->val.v.s.s, vavu->val.v.s.len);
-			td->cp += vavu->val.v.s.len;
+		if(_tps_xavu_cfg.len > 0 && _tps_xavu_field_a_contact_host.len > 0
+				&& _tps_xavu_field_b_contact_host.len > 0) {
+			if(dir == TPS_DIR_DOWNSTREAM) {
+				/* extract the a contact host */
+				vavu = xavu_get_child_with_sval(
+						&_tps_xavu_cfg, &_tps_xavu_field_a_contact_host);
+				if(vavu == NULL || vavu->val.v.s.len <= 0) {
+					LM_ERR("could not evaluate a_contact_host xavu\n");
+					return -1;
+				}
+				memcpy(td->cp, vavu->val.v.s.s, vavu->val.v.s.len);
+				td->cp += vavu->val.v.s.len;
+			} else {
+				/* extract the b contact host */
+				vavu = xavu_get_child_with_sval(
+						&_tps_xavu_cfg, &_tps_xavu_field_b_contact_host);
+				if(vavu == NULL || vavu->val.v.s.len <= 0) {
+					LM_ERR("could not evaluate b_contact_host xavu\n");
+					return -1;
+				}
+				memcpy(td->cp, vavu->val.v.s.s, vavu->val.v.s.len);
+				td->cp += vavu->val.v.s.len;
+			}
 		} else {
 			if(_tps_contact_host.len) {
 				/* using configured hostname in the contact header */
@@ -439,13 +457,29 @@ int tps_storage_fill_contact(
 		td->cp++;
 
 		/* contact_host xavu takes preference */
-		if(_tps_xavu_cfg.len > 0 && _tps_xavu_field_contact_host.len > 0) {
-			vavu = xavu_get_child_with_sval(
-					&_tps_xavu_cfg, &_tps_xavu_field_contact_host);
-		}
-		if(vavu != NULL && vavu->val.v.s.len > 0) {
-			memcpy(td->cp, vavu->val.v.s.s, vavu->val.v.s.len);
-			td->cp += vavu->val.v.s.len;
+		if(_tps_xavu_cfg.len > 0 && _tps_xavu_field_a_contact_host.len > 0
+				&& _tps_xavu_field_b_contact_host.len > 0) {
+			if(dir == TPS_DIR_DOWNSTREAM) {
+				/* extract the a contact host */
+				vavu = xavu_get_child_with_sval(
+						&_tps_xavu_cfg, &_tps_xavu_field_a_contact_host);
+				if(vavu == NULL || vavu->val.v.s.len <= 0) {
+					LM_ERR("could not evaluate a_contact_host xavu\n");
+					return -1;
+				}
+				memcpy(td->cp, vavu->val.v.s.s, vavu->val.v.s.len);
+				td->cp += vavu->val.v.s.len;
+			} else {
+				/* extract the b contact host */
+				vavu = xavu_get_child_with_sval(
+						&_tps_xavu_cfg, &_tps_xavu_field_b_contact_host);
+				if(vavu == NULL || vavu->val.v.s.len <= 0) {
+					LM_ERR("could not evaluate b_contact_host xavu\n");
+					return -1;
+				}
+				memcpy(td->cp, vavu->val.v.s.s, vavu->val.v.s.len);
+				td->cp += vavu->val.v.s.len;
+			}
 		} else {
 			if(_tps_contact_host.len) {
 				/* using configured hostname in the contact header */

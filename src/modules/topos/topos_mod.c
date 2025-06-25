@@ -130,6 +130,8 @@ str _tps_xavu_cfg = STR_NULL;
 str _tps_xavu_field_acontact = STR_NULL;
 str _tps_xavu_field_bcontact = STR_NULL;
 str _tps_xavu_field_contact_host = STR_NULL;
+str _tps_xavu_field_a_contact_host = STR_NULL;
+str _tps_xavu_field_b_contact_host = STR_NULL;
 
 str _tps_context_param = STR_NULL;
 str _tps_context_value = STR_NULL;
@@ -182,6 +184,8 @@ static param_export_t params[] = {
 	{"xavu_field_a_contact", PARAM_STR, &_tps_xavu_field_acontact},
 	{"xavu_field_b_contact", PARAM_STR, &_tps_xavu_field_bcontact},
 	{"xavu_field_contact_host", PARAM_STR, &_tps_xavu_field_contact_host},
+	{"xavu_field_a_contact_host", PARAM_STR, &_tps_xavu_field_a_contact_host},
+	{"xavu_field_b_contact_host", PARAM_STR, &_tps_xavu_field_b_contact_host},
 	{"rr_update", PARAM_INT, &_tps_rr_update},
 	{"context", PARAM_STR, &_tps_context_param},
 	{"methods_nocontact", PARAM_STR, &_tps_methods_nocontact_list},
@@ -319,6 +323,33 @@ static int mod_init(void)
 		LM_ERR("contact_mode parameter is 2,"
 			   " but a_contact or b_contact xavu fields not defined\n");
 		return -1;
+	}
+
+	if(_tps_xavu_cfg.len > 0
+			&& ((!_tps_xavu_field_a_contact_host.len)
+					!= (!_tps_xavu_field_b_contact_host.len))) {
+		LM_ERR("only one of a_contact_host and b_contact_host xavu fields are "
+			   "defined\n");
+		return -1;
+	}
+
+	/* xavu field_contact_host prevales over a/b contact host */
+	if(_tps_xavu_field_contact_host.len > 0) {
+		if(_tps_xavu_field_a_contact_host.s) {
+			pkg_free(_tps_xavu_field_a_contact_host.s);
+		}
+		if(_tps_xavu_field_b_contact_host.s) {
+			pkg_free(_tps_xavu_field_b_contact_host.s);
+		}
+		_tps_xavu_field_a_contact_host.s = NULL;
+		_tps_xavu_field_a_contact_host.len = 0;
+		_tps_xavu_field_b_contact_host.s = NULL;
+		_tps_xavu_field_b_contact_host.len = 0;
+
+		pkg_str_dup(
+				&_tps_xavu_field_a_contact_host, &_tps_xavu_field_contact_host);
+		pkg_str_dup(
+				&_tps_xavu_field_b_contact_host, &_tps_xavu_field_contact_host);
 	}
 
 	if(_tps_param_mask_callid == 1) {
